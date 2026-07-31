@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Reseller CRM Dashboard 📈
 
-## Getting Started
+Profesionalna web aplikacija izgrađena za praćenje, upravljanje i analitiku resellera i njihovih uplata. Aplikacija pruža napredni nadzor performansi, brzu administraciju te generiranje izvještaja.
 
-First, run the development server:
+## 🌟 Ključne značajke
 
+- **Upravljanje Resellerima:** Brzi pregled svih klijenata (resellera), njihovih detaljnih profila i ukupne vrijednosti (LTV).
+- **Evidencija Uplata:** Brzo dodavanje i praćenje uplata s ugrađenim pametnim pretraživačem i filtriranjem.
+- **Napredna Analitika:** Interaktivni grafikoni za vizualizaciju rasta prihoda i mjesečnih kretanja.
+- **Generiranje Izvještaja:** Eksportiranje mjesečnih podataka u profesionalne PDF i Excel dokumente jednim klikom.
+- **Pametno Pretraživanje:** Podržava neosjetljivost na velika i mala slova, kao i standardizaciju hrvatskih znakova (č, ć, š, ž, đ) te formatirane iznose uplata (npr. 300,00).
+- **Tematski Dizajn:** Moderni premium korisničko sučelje (UI) s Glassmorphism dizajnom i podrškom za Svijetlu i Tamnu temu (Light/Dark mode).
+- **Responzivnost:** Potpuno prilagođeno za računala, tablete i mobilne telefone s glatkim animacijama.
+- **Sigurnost:** Firebase Authentication sa zaštićenim rutama.
+
+## 🛠️ Tehnologije
+
+- **Frontend:** Next.js (React), TypeScript
+- **Dizajn/Stiliziranje:** Vanilla CSS (Glassmorphism, CSS Varijable)
+- **Baza podataka i Auth:** Firebase Firestore & Firebase Authentication
+- **Grafikoni:** Recharts
+- **Izvještaji:** jsPDF (za PDF) i XLSX (za Excel)
+- **Ikone:** React Icons (Feather Icons)
+- **Animacije i efekti:** Canvas Confetti
+
+## 🚀 Pokretanje projekta (Lokalno)
+
+Za pokretanje ovog projekta na svom računalu trebat ćete Node.js instaliran na sustavu.
+
+1. **Instalacija paketa:**
+   ```bash
+   npm install
+   ```
+
+2. **Pokretanje razvojnog (Dev) servera:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Otvaranje u pregledniku:**
+   Otvorite [http://localhost:3000](http://localhost:3000) u svom omiljenom pregledniku.
+
+## 🌐 Postavljanje na internet (Deployment)
+
+Aplikacija je optimizirana za postavljanje putem Vercela.
+Za objavu aplikacije uživo jednostavno koristite naredbu:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx vercel --prod
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔐 Konfiguracija (Firebase)
+Aplikacija zahtijeva ispravnu konfiguraciju Firebase projekta. Potrebno je postaviti `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` i ostale standardne Firebase varijable unutar vaše `.env.local` datoteke te postaviti Firestore pravila za čitanje/pisanje.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+Dizajnirano i izrađeno za vrhunsko korisničko iskustvo.
