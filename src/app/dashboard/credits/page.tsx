@@ -320,8 +320,8 @@ export default function CreditsPage() {
           background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem'
         }}>
-          <div className="glass" style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '16px', width: '100%', maxWidth: '400px', border: '1px solid var(--border)' }}>
-            <h2 style={{ margin: '0 0 1.5rem 0', color: 'white' }}>
+          <div className="glass" style={{ background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '16px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid var(--border)' }}>
+            <h2 style={{ margin: '0 0 1.5rem 0', color: 'white', fontSize: '1.5rem' }}>
               {modalType === 'allocation' ? 'Izdaj Novi Kredit' : 'Upiši Otplatu Kredita'}
             </h2>
             
