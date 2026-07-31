@@ -6,6 +6,8 @@ import { db } from "@/lib/firebase";
 import { CreditTransaction, Reseller, formatCurrency } from "@/lib/types";
 import { FiTrendingUp, FiTrendingDown, FiActivity, FiPlus, FiTrash2, FiSearch } from "react-icons/fi";
 import { format } from "date-fns";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function CreditsPage() {
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
@@ -20,7 +22,7 @@ export default function CreditsPage() {
   // Form states
   const [selectedReseller, setSelectedReseller] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
   const [payerName, setPayerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,7 +54,7 @@ export default function CreditsPage() {
     setAmount("");
     setNotes("");
     setPayerName("");
-    setDate(new Date().toISOString().split('T')[0]);
+    setDate(new Date());
     setIsModalOpen(true);
   };
 
@@ -66,7 +68,7 @@ export default function CreditsPage() {
         resellerName: selectedReseller,
         type: modalType,
         amount: parseFloat(amount.replace(',', '.')),
-        date: date,
+        date: date.toISOString(),
         notes: notes || undefined,
         payerName: payerName.trim() || undefined,
         createdAt: new Date().toISOString()
@@ -371,15 +373,21 @@ export default function CreditsPage() {
                 </div>
               </div>
 
-              <div>
+              <div style={{ width: '100%' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Datum</label>
-                <input 
-                  type="date" 
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'white' }}
-                />
+                <div style={{ width: '100%' }}>
+                  <DatePicker 
+                    selected={date} 
+                    onChange={(d: Date | null) => d && setDate(d)}
+                    dateFormat="dd.MM.yyyy."
+                    wrapperClassName="w-full"
+                    customInput={
+                      <input 
+                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'white' }}
+                      />
+                    }
+                  />
+                </div>
               </div>
 
               <div>
