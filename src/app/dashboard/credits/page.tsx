@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CreditTransaction, Reseller, formatCurrency } from "@/lib/types";
-import { FiTrendingUp, FiTrendingDown, FiActivity, FiPlus, FiTrash2, FiSearch, FiDollarSign } from "react-icons/fi";
+import { FiTrendingUp, FiTrendingDown, FiActivity, FiPlus, FiTrash2, FiSearch } from "react-icons/fi";
 import { format } from "date-fns";
 
 export default function CreditsPage() {
@@ -333,8 +333,8 @@ export default function CreditsPage() {
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Iznos (€)</label>
                 <div style={{ position: 'relative' }}>
-                  <FiDollarSign style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                  <input 
+                  <span style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>€</span>
+                  <input  
                     type="number" 
                     step="0.01"
                     min="0"
