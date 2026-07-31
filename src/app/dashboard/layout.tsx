@@ -5,7 +5,7 @@ import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiHome, FiPieChart, FiLogOut, FiUsers, FiSun, FiMoon } from "react-icons/fi";
+import { FiHome, FiPieChart, FiLogOut, FiUsers, FiSun, FiMoon, FiCreditCard } from "react-icons/fi";
 import { useState, useEffect } from "react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -33,6 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Nadzorna ploča", href: "/dashboard", icon: FiHome },
     { name: "Analitika", href: "/dashboard/analytics", icon: FiPieChart },
     { name: "Moji Reselleri", href: "/dashboard/resellers", icon: FiUsers },
+    { name: "Krediti", href: "/dashboard/credits", icon: FiCreditCard },
   ];
 
   return (

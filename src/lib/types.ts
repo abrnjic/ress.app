@@ -38,3 +38,13 @@ export function formatCurrency(amount: number): string {
     currency: 'EUR'
   }).format(amount);
 }
+
+export interface CreditTransaction {
+  id?: string;
+  resellerName: string;
+  type: 'allocation' | 'repayment';
+  amount: number;
+  date: string; // ISO string
+  notes?: string;
+  createdAt?: string;
+}
