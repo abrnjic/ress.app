@@ -43,6 +43,7 @@ export interface CreditTransaction {
   id?: string;
   resellerName: string;
   type: 'allocation' | 'repayment';
+  payerName?: string;
   amount: number;
   date: string; // ISO string
   notes?: string;

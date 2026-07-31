@@ -22,6 +22,7 @@ export default function CreditsPage() {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState("");
+  const [payerName, setPayerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export default function CreditsPage() {
     setSelectedReseller("");
     setAmount("");
     setNotes("");
+    setPayerName("");
     setDate(new Date().toISOString().split('T')[0]);
     setIsModalOpen(true);
   };
@@ -60,12 +62,13 @@ export default function CreditsPage() {
 
     setIsSubmitting(true);
     try {
-      const tx: CreditTransaction = {
+      const tx: any = {
         resellerName: selectedReseller,
         type: modalType,
         amount: parseFloat(amount.replace(',', '.')),
         date: date,
         notes: notes || undefined,
+        payerName: payerName.trim() || undefined,
         createdAt: new Date().toISOString()
       };
 
@@ -119,7 +122,8 @@ export default function CreditsPage() {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return tx.resellerName.toLowerCase().includes(query) || 
-           tx.amount.toString().includes(query);
+           tx.amount.toString().includes(query) ||
+           (tx.payerName && tx.payerName.toLowerCase().includes(query));
   });
 
   if (loading) {
@@ -268,7 +272,14 @@ export default function CreditsPage() {
                     <td style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)' }}>
                       {format(new Date(tx.date), 'dd.MM.yyyy')}
                     </td>
-                    <td style={{ padding: '1rem 1.5rem', color: 'white', fontWeight: '500' }}>{tx.resellerName}</td>
+                    <td style={{ padding: '1rem 1.5rem', color: 'white', fontWeight: '500' }}>
+                      {tx.resellerName}
+                      {tx.payerName && (
+                        <div style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                          Uplatio: {tx.payerName}
+                        </div>
+                      )}
+                    </td>
                     <td style={{ padding: '1rem 1.5rem' }}>
                       <span style={{
                         padding: '0.25rem 0.5rem',
@@ -330,6 +341,19 @@ export default function CreditsPage() {
                 </select>
               </div>
               
+              {modalType === 'repayment' && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Ime Uplatitelja / Subsellera (Opcionalno)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Npr. Ahmet"
+                    value={payerName}
+                    onChange={e => setPayerName(e.target.value)}
+                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'white' }}
+                  />
+                </div>
+              )}
+
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Iznos (€)</label>
                 <div style={{ position: 'relative' }}>
