@@ -129,13 +129,13 @@ export default function CreditsPage() {
   });
 
   if (loading) {
-    return <div style={{ padding: '2rem', color: 'white' }}>Učitavanje kredita...</div>;
+    return <div style={{ padding: '2rem', color: 'var(--text-primary)' }}>Učitavanje kredita...</div>;
   }
 
   return (
     <div className="animate-fade-in" style={{ padding: '1rem 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white', margin: 0 }}>Sustav Kredita</h1>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: 0 }}>Sustav Kredita</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button 
             onClick={() => openModal('allocation')}
@@ -167,7 +167,7 @@ export default function CreditsPage() {
             </div>
             <div>
               <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Ukupno Izdano</p>
-              <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'white' }}>{formatCurrency(totalAllocated)}</h3>
+              <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text-primary)' }}>{formatCurrency(totalAllocated)}</h3>
             </div>
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function CreditsPage() {
             </div>
             <div>
               <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Ukupno Otplaćeno</p>
-              <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'white' }}>{formatCurrency(totalRepaid)}</h3>
+              <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text-primary)' }}>{formatCurrency(totalRepaid)}</h3>
             </div>
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function CreditsPage() {
         {/* Balances Table */}
         <div className="glass" style={{ borderRadius: '16px', overflow: 'hidden' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
-            <h3 style={{ margin: 0, color: 'white' }}>Stanje po Resellerima</h3>
+            <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Stanje po Resellerima</h3>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Prikaz onih s aktivnim povijestima</p>
           </div>
           <div style={{ overflowX: 'auto' }}>
@@ -218,7 +218,7 @@ export default function CreditsPage() {
               <tbody>
                 {balanceArray.map((b, i) => (
                   <tr key={b.name} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                    <td style={{ padding: '1rem 1.5rem', color: 'white', fontWeight: '500' }}>{b.name}</td>
+                    <td style={{ padding: '1rem 1.5rem', color: 'var(--text-primary)', fontWeight: '500' }}>{b.name}</td>
                     <td style={{ padding: '1rem 1.5rem', color: 'var(--danger)' }}>{formatCurrency(b.allocated)}</td>
                     <td style={{ padding: '1rem 1.5rem', color: 'var(--success)' }}>{formatCurrency(b.repaid)}</td>
                     <td style={{ padding: '1rem 1.5rem', color: b.debt > 0 ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 'bold' }}>
@@ -240,7 +240,7 @@ export default function CreditsPage() {
         <div className="glass" style={{ borderRadius: '16px', overflow: 'hidden' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
-              <h3 style={{ margin: 0, color: 'white' }}>Povijest Transakcija</h3>
+              <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Povijest Transakcija</h3>
             </div>
             <div style={{ position: 'relative' }}>
               <FiSearch style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -251,7 +251,7 @@ export default function CreditsPage() {
                 onChange={e => setSearchQuery(e.target.value)}
                 style={{
                   background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-                  padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '8px', color: 'white',
+                  padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '8px', color: 'var(--text-primary)',
                   outline: 'none', width: '200px'
                 }}
               />
@@ -274,7 +274,7 @@ export default function CreditsPage() {
                     <td style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)' }}>
                       {format(new Date(tx.date), 'dd.MM.yyyy')}
                     </td>
-                    <td style={{ padding: '1rem 1.5rem', color: 'white', fontWeight: '500' }}>
+                    <td style={{ padding: '1rem 1.5rem', color: 'var(--text-primary)', fontWeight: '500' }}>
                       {tx.resellerName}
                       {tx.payerName && (
                         <div style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
@@ -294,7 +294,7 @@ export default function CreditsPage() {
                         {tx.type === 'allocation' ? 'KREDIT' : 'OTPLATA'}
                       </span>
                     </td>
-                    <td style={{ padding: '1rem 1.5rem', color: 'white', fontWeight: 'bold' }}>
+                    <td style={{ padding: '1rem 1.5rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>
                       {tx.type === 'allocation' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </td>
                     <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
@@ -323,7 +323,7 @@ export default function CreditsPage() {
           display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, padding: '2rem 1rem', overflowY: 'auto'
         }}>
           <div className="glass" style={{ background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '16px', width: '100%', maxWidth: '400px', margin: 'auto', border: '1px solid var(--border)' }}>
-            <h2 style={{ margin: '0 0 1.5rem 0', color: 'white', fontSize: '1.5rem' }}>
+            <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.5rem' }}>
               {modalType === 'allocation' ? 'Izdaj Novi Kredit' : 'Upiši Otplatu Kredita'}
             </h2>
             
@@ -334,7 +334,7 @@ export default function CreditsPage() {
                   value={selectedReseller} 
                   onChange={e => setSelectedReseller(e.target.value)}
                   required
-                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'white' }}
+                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                 >
                   <option value="">Odaberite resellera...</option>
                   {resellers.map(r => (
@@ -351,7 +351,7 @@ export default function CreditsPage() {
                     placeholder="Npr. Ahmet"
                     value={payerName}
                     onChange={e => setPayerName(e.target.value)}
-                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'white' }}
+                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   />
                 </div>
               )}
@@ -368,7 +368,7 @@ export default function CreditsPage() {
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
                     required
-                    style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.5rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'white' }}
+                    style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.5rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   />
                 </div>
               </div>
@@ -383,7 +383,7 @@ export default function CreditsPage() {
                     wrapperClassName="w-full"
                     customInput={
                       <input 
-                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'white' }}
+                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                       />
                     }
                   />
@@ -397,7 +397,7 @@ export default function CreditsPage() {
                   placeholder="Npr. Kratkoročna pozajmica"
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'white' }}
+                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                 />
               </div>
 
@@ -405,7 +405,7 @@ export default function CreditsPage() {
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  style={{ flex: 1, padding: '0.8rem', background: 'transparent', border: '1px solid var(--border)', color: 'white', borderRadius: '8px', cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '0.8rem', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '8px', cursor: 'pointer' }}
                 >
                   Odustani
                 </button>

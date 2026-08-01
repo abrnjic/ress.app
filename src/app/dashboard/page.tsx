@@ -349,7 +349,7 @@ export default function DashboardPage() {
                   borderRadius: '8px', 
                   border: 'none', 
                   background: monthStatus?.isClosed ? 'var(--bg-hover)' : 'linear-gradient(135deg, var(--danger), var(--danger-hover))', 
-                  color: 'white', 
+                  color: 'var(--text-primary)', 
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   width: '100%',

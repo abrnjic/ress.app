@@ -71,7 +71,7 @@ export default function LoginPage() {
           <FiLock size={28} color="white" />
         </div>
 
-        <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>Dobrodošli natrag</h2>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Dobrodošli natrag</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', textAlign: 'center' }}>Prijavite se kako biste pristupili nadzornoj ploči za resellere.</p>
 
         {error && (
@@ -108,7 +108,7 @@ export default function LoginPage() {
                 borderRadius: '12px', 
                 border: '1px solid rgba(255, 255, 255, 0.1)', 
                 background: 'rgba(15, 23, 42, 0.6)', 
-                color: 'white',
+                color: 'var(--text-primary)',
                 fontSize: '1rem',
                 outline: 'none',
                 transition: 'border-color 0.2s'
@@ -134,7 +134,7 @@ export default function LoginPage() {
                 borderRadius: '12px', 
                 border: '1px solid rgba(255, 255, 255, 0.1)', 
                 background: 'rgba(15, 23, 42, 0.6)', 
-                color: 'white',
+                color: 'var(--text-primary)',
                 fontSize: '1rem',
                 outline: 'none',
                 transition: 'border-color 0.2s'
