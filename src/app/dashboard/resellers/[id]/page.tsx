@@ -10,6 +10,24 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format } from "date-fns";
 import { hr } from "date-fns/locale/hr";
 
+function parseCustomDate(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) return d;
+  
+  if (dateStr.includes('.')) {
+    const parts = dateStr.split('.');
+    if (parts.length >= 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const customD = new Date(year, month, day);
+      if (!isNaN(customD.getTime())) return customD;
+    }
+  }
+  return new Date();
+}
+
 export default function ResellerProfilePage() {
   const params = useParams();
   const router = useRouter();
@@ -47,7 +65,7 @@ export default function ResellerProfilePage() {
           const pList: Payment[] = [];
           paySnap.forEach(p => pList.push({ id: p.id, ...p.data() } as Payment));
           
-          pList.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          pList.sort((a, b) => parseCustomDate(a.date).getTime() - parseCustomDate(b.date).getTime());
           setPayments(pList);
         } else {
           router.push("/dashboard/resellers");
@@ -93,7 +111,7 @@ export default function ResellerProfilePage() {
 
   // Chart data
   const chartData = payments.map(p => ({
-    Datum: format(new Date(p.date), 'dd.MM.yyyy'),
+    Datum: format(parseCustomDate(p.date), 'dd.MM.yyyy'),
     Iznos: p.amount
   }));
 

@@ -6,6 +6,23 @@ import { db } from "@/lib/firebase";
 import { Payment, MonthStatus, formatCurrency } from "@/lib/types";
 import { format, subMonths, addMonths } from "date-fns";
 import { hr } from "date-fns/locale/hr";
+
+function parseCustomDate(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) return d;
+  if (dateStr.includes('.')) {
+    const parts = dateStr.split('.');
+    if (parts.length >= 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const customD = new Date(year, month, day);
+      if (!isNaN(customD.getTime())) return customD;
+    }
+  }
+  return new Date();
+}
 import PaymentForm from "@/components/PaymentForm";
 import PaymentTable from "@/components/PaymentTable";
 import { FiDownload, FiFileText, FiAlertCircle } from "react-icons/fi";
@@ -214,7 +231,7 @@ export default function DashboardPage() {
     // Table Data
     const tableData = payments.map((p, i) => [
       i + 1,
-      format(new Date(p.date), 'dd.MM.yyyy'),
+      format(parseCustomDate(p.date), 'dd.MM.yyyy'),
       p.resellerName,
       `${p.amount.toFixed(2)} EUR`
     ]);
@@ -250,7 +267,7 @@ export default function DashboardPage() {
   const exportCSV = () => {
     const headers = ["Datum", "Reseller", "Iznos (EUR)"];
     const rows = payments.map(p => [
-      format(new Date(p.date), 'dd.MM.yyyy'),
+      format(parseCustomDate(p.date), 'dd.MM.yyyy'),
       p.resellerName,
       p.amount.toFixed(2)
     ]);
