@@ -342,7 +342,7 @@ export default function CreditsPage() {
           background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, padding: '2rem 1rem', overflowY: 'auto'
         }}>
-          <div className="glass" style={{ background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '16px', width: '100%', maxWidth: '400px', margin: 'auto', border: '1px solid var(--border)' }}>
+          <div className="glass" style={{ background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '16px', width: '100%', maxWidth: '400px', margin: '0 auto', border: '1px solid var(--border)' }}>
             <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.5rem' }}>
               {editingTxId 
                 ? (modalType === 'allocation' ? 'Uredi Kredit' : 'Uredi Otplatu')
@@ -367,7 +367,7 @@ export default function CreditsPage() {
               </div>
               
               {modalType === 'repayment' && (
-                <div style={{ marginBottom: '1rem' }}>
+                <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Ime Uplatitelja / Subsellera (Opcionalno)</label>
                   <input 
                     type="text" 
