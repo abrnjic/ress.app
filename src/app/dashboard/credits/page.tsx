@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CreditTransaction, Reseller, formatCurrency } from "@/lib/types";
-import { FiTrendingUp, FiTrendingDown, FiActivity, FiPlus, FiTrash2, FiSearch } from "react-icons/fi";
+import { FiTrendingUp, FiTrendingDown, FiActivity, FiPlus, FiTrash2, FiSearch, FiEdit3 } from "react-icons/fi";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -26,6 +26,7 @@ export default function CreditsPage() {
   const [notes, setNotes] = useState("");
   const [payerName, setPayerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingTxId, setEditingTxId] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch resellers
@@ -48,13 +49,23 @@ export default function CreditsPage() {
     return () => unsubscribe();
   }, []);
 
-  const openModal = (type: 'allocation' | 'repayment') => {
+  const openModal = (type: 'allocation' | 'repayment', tx?: CreditTransaction) => {
     setModalType(type);
-    setSelectedReseller("");
-    setAmount("");
-    setNotes("");
-    setPayerName("");
-    setDate(new Date());
+    if (tx) {
+      setEditingTxId(tx.id!);
+      setSelectedReseller(tx.resellerName);
+      setAmount(tx.amount.toString());
+      setNotes(tx.notes || "");
+      setPayerName(tx.payerName || "");
+      setDate(new Date(tx.date));
+    } else {
+      setEditingTxId(null);
+      setSelectedReseller("");
+      setAmount("");
+      setNotes("");
+      setPayerName("");
+      setDate(new Date());
+    }
     setIsModalOpen(true);
   };
 
@@ -70,11 +81,15 @@ export default function CreditsPage() {
         amount: parseFloat(amount.replace(',', '.')),
         date: date.toISOString(),
         notes: notes || undefined,
-        payerName: payerName.trim() || undefined,
-        createdAt: new Date().toISOString()
+        payerName: payerName.trim() || undefined
       };
 
-      await addDoc(collection(db, "credit_transactions"), tx);
+      if (editingTxId) {
+        await updateDoc(doc(db, "credit_transactions", editingTxId), tx);
+      } else {
+        tx.createdAt = new Date().toISOString();
+        await addDoc(collection(db, "credit_transactions"), tx);
+      }
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error adding transaction:", error);
@@ -297,8 +312,11 @@ export default function CreditsPage() {
                     <td style={{ padding: '1rem 1.5rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>
                       {tx.type === 'allocation' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </td>
-                    <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
-                      <button onClick={() => handleDelete(tx.id!)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                    <td style={{ padding: '1rem 1.5rem', textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <button onClick={() => openModal(tx.type, tx)} style={{ background: 'transparent', border: 'none', color: 'var(--accent)', cursor: 'pointer' }} title="Uredi">
+                        <FiEdit3 size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(tx.id!)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }} title="Obriši">
                         <FiTrash2 size={16} />
                       </button>
                     </td>
@@ -324,7 +342,10 @@ export default function CreditsPage() {
         }}>
           <div className="glass" style={{ background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '16px', width: '100%', maxWidth: '400px', margin: 'auto', border: '1px solid var(--border)' }}>
             <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.5rem' }}>
-              {modalType === 'allocation' ? 'Izdaj Novi Kredit' : 'Upiši Otplatu Kredita'}
+              {editingTxId 
+                ? (modalType === 'allocation' ? 'Uredi Kredit' : 'Uredi Otplatu')
+                : (modalType === 'allocation' ? 'Dodaj Novi Kredit' : 'Upiši Otplatu Kredita')
+              }
             </h2>
             
             <form onSubmit={handleAddTransaction} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -414,7 +435,7 @@ export default function CreditsPage() {
                   disabled={isSubmitting}
                   style={{ flex: 1, padding: '0.8rem', background: modalType === 'allocation' ? 'var(--danger)' : 'var(--success)', border: 'none', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
-                  {isSubmitting ? 'Spremanje...' : 'Spremi'}
+                  {isSubmitting ? 'Spremanje...' : (editingTxId ? 'Spremi Promjene' : (modalType === 'allocation' ? 'Dodaj Kredit' : 'Upiši Otplatu'))}
                 </button>
               </div>
             </form>
