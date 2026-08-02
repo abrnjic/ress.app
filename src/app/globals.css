@@ -303,3 +303,5 @@ button:active {
     padding: 1.25rem !important;
   }
 }
+
+.hover-scale:hover { transform: scale(1.1); }

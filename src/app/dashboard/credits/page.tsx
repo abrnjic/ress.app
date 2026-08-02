@@ -174,7 +174,7 @@ export default function CreditsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
         <div className="glass stat-card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
             <div style={{ padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: '12px' }}>
@@ -212,10 +212,10 @@ export default function CreditsPage() {
         </div>
       </div>
 
-      <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'flex-start' }}>
         
         {/* Balances Table */}
-        <div className="glass" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+        <div className="glass" style={{ flex: '1 1 400px', borderRadius: '16px', overflow: 'hidden' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
             <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Stanje po Resellerima</h3>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Prikaz onih s aktivnim povijestima</p>
@@ -252,7 +252,7 @@ export default function CreditsPage() {
         </div>
 
         {/* Transactions History */}
-        <div className="glass" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+        <div className="glass" style={{ flex: '1.5 1 500px', borderRadius: '16px', overflow: 'hidden' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
               <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Povijest Transakcija</h3>
@@ -280,7 +280,7 @@ export default function CreditsPage() {
                   <th style={{ padding: '1rem 1.5rem' }}>Reseller</th>
                   <th style={{ padding: '1rem 1.5rem' }}>Tip</th>
                   <th style={{ padding: '1rem 1.5rem' }}>Iznos</th>
-                  <th style={{ padding: '1rem 1.5rem' }}></th>
+                  <th style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>Akcije</th>
                 </tr>
               </thead>
               <tbody>
@@ -312,13 +312,15 @@ export default function CreditsPage() {
                     <td style={{ padding: '1rem 1.5rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>
                       {tx.type === 'allocation' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </td>
-                    <td style={{ padding: '1rem 1.5rem', textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                      <button onClick={() => openModal(tx.type, tx)} style={{ background: 'transparent', border: 'none', color: 'var(--accent)', cursor: 'pointer' }} title="Uredi">
-                        <FiEdit3 size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(tx.id!)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }} title="Obriši">
-                        <FiTrash2 size={16} />
-                      </button>
+                    <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <button onClick={() => openModal(tx.type, tx)} style={{ padding: '0.5rem', background: 'rgba(59, 130, 246, 0.1)', border: 'none', borderRadius: '8px', color: 'var(--accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }} title="Uredi" className="hover-scale">
+                          <FiEdit3 size={16} />
+                        </button>
+                        <button onClick={() => handleDelete(tx.id!)} style={{ padding: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', border: 'none', borderRadius: '8px', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }} title="Obriši" className="hover-scale">
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
