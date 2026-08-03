@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy, onSnapshot, deleteField } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CreditTransaction, Reseller, formatCurrency } from "@/lib/types";
 import { FiTrendingUp, FiTrendingDown, FiActivity, FiPlus, FiTrash2, FiSearch, FiEdit3 } from "react-icons/fi";
@@ -79,14 +79,16 @@ export default function CreditsPage() {
         resellerName: selectedReseller,
         type: modalType,
         amount: parseFloat(amount.replace(',', '.')),
-        date: date.toISOString(),
-        notes: notes || undefined,
-        payerName: payerName.trim() || undefined
+        date: date.toISOString()
       };
 
       if (editingTxId) {
+        tx.notes = notes || deleteField();
+        tx.payerName = payerName.trim() || deleteField();
         await updateDoc(doc(db, "credit_transactions", editingTxId), tx);
       } else {
+        if (notes) tx.notes = notes;
+        if (payerName.trim()) tx.payerName = payerName.trim();
         tx.createdAt = new Date().toISOString();
         await addDoc(collection(db, "credit_transactions"), tx);
       }
