@@ -298,6 +298,11 @@ export default function CreditsPage() {
                           Uplatio: {tx.payerName}
                         </div>
                       )}
+                      {tx.notes && (
+                        <div style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginTop: '0.1rem', fontStyle: 'italic' }}>
+                          * {tx.notes}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: '1rem 1.5rem' }}>
                       <span style={{
