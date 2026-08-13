@@ -235,10 +235,10 @@ export default function CreditsPage() {
               <tbody>
                 {balanceArray.map((b, i) => (
                   <tr key={b.name} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                    <td style={{ padding: '0.4rem 0.8rem', color: 'var(--text-primary)', fontWeight: '500' }}>{b.name}</td>
-                    <td style={{ padding: '0.4rem 0.8rem', color: 'var(--danger)' }}>{formatCurrency(b.allocated)}</td>
-                    <td style={{ padding: '0.4rem 0.8rem', color: 'var(--success)' }}>{formatCurrency(b.repaid)}</td>
-                    <td style={{ padding: '0.4rem 0.8rem', color: b.debt > 0 ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 'bold' }}>
+                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--text-primary)', fontWeight: '500' }}>{b.name}</td>
+                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--danger)' }}>{formatCurrency(b.allocated)}</td>
+                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--success)' }}>{formatCurrency(b.repaid)}</td>
+                    <td style={{ padding: '0.2rem 0.8rem', color: b.debt > 0 ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 'bold' }}>
                       {formatCurrency(b.debt)}
                     </td>
                   </tr>
@@ -288,23 +288,20 @@ export default function CreditsPage() {
               <tbody>
                 {filteredTransactions.map((tx, i) => (
                   <tr key={tx.id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                    <td style={{ padding: '0.4rem 0.8rem', color: 'var(--text-secondary)' }}>
+                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--text-secondary)' }}>
                       {format(new Date(tx.date), 'dd.MM.yyyy')}
                     </td>
-                    <td style={{ padding: '0.4rem 0.8rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--text-primary)', fontWeight: '500' }}>
                       <div style={{ lineHeight: '1.2' }}>{tx.resellerName}</div>
-                      {tx.payerName && (
-                        <div style={{ fontSize: '0.75em', color: 'var(--text-muted)' }}>
-                          Uplatio: {tx.payerName}
-                        </div>
-                      )}
-                      {tx.notes && (
-                        <div style={{ fontSize: '0.75em', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                          * {tx.notes}
+                      {(tx.payerName || tx.notes) && (
+                        <div style={{ fontSize: '0.75em', color: 'var(--text-muted)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', lineHeight: '1.2' }}>
+                          {tx.payerName && <span>Uplatio: {tx.payerName}</span>}
+                          {tx.payerName && tx.notes && <span>|</span>}
+                          {tx.notes && <span style={{ fontStyle: 'italic' }}>* {tx.notes}</span>}
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: '0.4rem 0.8rem' }}>
+                    <td style={{ padding: '0.2rem 0.8rem' }}>
                       <span style={{
                         padding: '0.15rem 0.4rem',
                         borderRadius: '4px',
@@ -316,15 +313,15 @@ export default function CreditsPage() {
                         {tx.type === 'allocation' ? 'KREDIT' : 'OTPLATA'}
                       </span>
                     </td>
-                    <td style={{ padding: '0.4rem 0.8rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>
+                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>
                       {tx.type === 'allocation' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </td>
-                    <td style={{ padding: '0.4rem 0.8rem', textAlign: 'right' }}>
+                    <td style={{ padding: '0.2rem 0.8rem', textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
-                        <button onClick={() => openModal(tx.type, tx)} style={{ padding: '0.5rem', background: 'rgba(59, 130, 246, 0.1)', border: 'none', borderRadius: '8px', color: 'var(--accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }} title="Uredi" className="hover-scale">
+                        <button onClick={() => openModal(tx.type, tx)} style={{ padding: '0.3rem', background: 'rgba(59, 130, 246, 0.1)', border: 'none', borderRadius: '6px', color: 'var(--accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }} title="Uredi" className="hover-scale">
                           <FiEdit3 size={16} />
                         </button>
-                        <button onClick={() => handleDelete(tx.id!)} style={{ padding: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', border: 'none', borderRadius: '8px', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }} title="Obriši" className="hover-scale">
+                        <button onClick={() => handleDelete(tx.id!)} style={{ padding: '0.3rem', background: 'rgba(239, 68, 68, 0.1)', border: 'none', borderRadius: '6px', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }} title="Obriši" className="hover-scale">
                           <FiTrash2 size={16} />
                         </button>
                       </div>
