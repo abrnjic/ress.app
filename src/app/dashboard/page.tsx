@@ -82,7 +82,10 @@ export default function DashboardPage() {
         return match ? parseInt(match[0], 10) : 0;
       };
 
-      fetchedPayments.sort((a, b) => getDayForSort(a.date) - getDayForSort(b.date));
+      fetchedPayments.sort((a, b) =>
+        getDayForSort(b.date) - getDayForSort(a.date) ||
+        (b.createdAt || "").localeCompare(a.createdAt || "")
+      );
       if (request !== requestId.current) return;
       setPayments(fetchedPayments);
 
