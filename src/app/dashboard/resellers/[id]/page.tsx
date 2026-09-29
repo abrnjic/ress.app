@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { resellerNameVariants } from "@/lib/reseller-names";
 import { db } from "@/lib/firebase";
 import { Reseller, Payment, formatCurrency } from "@/lib/types";
 import { useParams, useRouter } from "next/navigation";
@@ -60,7 +61,7 @@ export default function ResellerProfilePage() {
           setEditNotes(rData.notes || "");
 
           // Fetch payments for this reseller
-          const q = query(collection(db, "payments"), where("resellerName", "==", rData.name));
+          const q = query(collection(db, "payments"), where("resellerName", "in", resellerNameVariants(rData.name)));
           const paySnap = await getDocs(q);
           const pList: Payment[] = [];
           paySnap.forEach(p => pList.push({ id: p.id, ...p.data() } as Payment));
@@ -125,7 +126,7 @@ export default function ResellerProfilePage() {
         <FiArrowLeft /> Nazad na sve klijente
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', alignItems: 'start' }}>
+      <div className="profile-grid">
         
         {/* Profile Card */}
         <div className="glass" style={{ padding: '2rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
