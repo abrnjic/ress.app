@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy, onSnapshot, deleteField } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CreditTransaction, Reseller, formatCurrency } from "@/lib/types";
-import { FiTrendingUp, FiTrendingDown, FiActivity, FiPlus, FiTrash2, FiSearch, FiEdit3 } from "react-icons/fi";
+import { FiPlus, FiArrowDownLeft, FiTrash2, FiSearch, FiEdit3 } from "react-icons/fi";
+import SidePanel from "@/components/SidePanel";
+import { hr } from "date-fns/locale/hr";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -14,6 +16,15 @@ export default function CreditsPage() {
   const [resellers, setResellers] = useState<Reseller[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [resellerFilter, setResellerFilter] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [formError, setFormError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [resellersLoading, setResellersLoading] = useState(true);
+  const [resellerError, setResellerError] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,10 +42,13 @@ export default function CreditsPage() {
   useEffect(() => {
     // Fetch resellers
     const fetchResellers = async () => {
-      const q = query(collection(db, "resellers"), orderBy("name"));
-      const snapshot = await getDocs(q);
-      const resData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Reseller));
-      setResellers(resData);
+      try {
+        const q = query(collection(db, "resellers"), orderBy("name"));
+        const snapshot = await getDocs(q);
+        const resData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Reseller));
+        setResellers(resData);
+      } catch { setResellerError("Popis resellera nije učitan. Osvježite stranicu i pokušajte ponovno."); }
+      finally { setResellersLoading(false); }
     };
     fetchResellers();
 
@@ -44,12 +58,14 @@ export default function CreditsPage() {
       const txData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CreditTransaction));
       setTransactions(txData);
       setLoading(false);
-    });
+      setLoadError("");
+    }, () => { setLoadError("Krediti nisu učitani. Provjerite vezu i osvježite stranicu."); setLoading(false); });
 
     return () => unsubscribe();
   }, []);
 
-  const openModal = (type: 'allocation' | 'repayment', tx?: CreditTransaction) => {
+  const openModal = (type: 'allocation' | 'repayment', tx?: CreditTransaction, resellerName = '') => {
+    setFormError('');
     setModalType(type);
     if (tx) {
       setEditingTxId(tx.id!);
@@ -60,7 +76,7 @@ export default function CreditsPage() {
       setDate(new Date(tx.date));
     } else {
       setEditingTxId(null);
-      setSelectedReseller("");
+      setSelectedReseller(resellerName);
       setAmount("");
       setNotes("");
       setPayerName("");
@@ -71,40 +87,51 @@ export default function CreditsPage() {
 
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedReseller || !amount || !date) return;
+    if (isSubmitting) return;
+    const numericAmount = Number(amount.replace(",", "."));
+    if (!selectedReseller || !amount.trim() || !Number.isFinite(numericAmount) || numericAmount < 0 || !Number.isFinite(date.getTime())) { setFormError("Provjerite resellera, iznos i datum."); return; }
+    setFormError("");
 
     setIsSubmitting(true);
     try {
-      const tx: any = {
+      const tx = {
         resellerName: selectedReseller,
         type: modalType,
-        amount: parseFloat(amount.replace(',', '.')),
+        amount: numericAmount,
         date: date.toISOString()
       };
 
       if (editingTxId) {
-        tx.notes = notes || deleteField();
-        tx.payerName = payerName.trim() || deleteField();
-        await updateDoc(doc(db, "credit_transactions", editingTxId), tx);
+        await updateDoc(doc(db, "credit_transactions", editingTxId), {
+          ...tx,
+          notes: notes || deleteField(),
+          payerName: payerName.trim() || deleteField(),
+        });
       } else {
-        if (notes) tx.notes = notes;
-        if (payerName.trim()) tx.payerName = payerName.trim();
-        tx.createdAt = new Date().toISOString();
-        await addDoc(collection(db, "credit_transactions"), tx);
+        await addDoc(collection(db, "credit_transactions"), {
+          ...tx,
+          ...(notes ? { notes } : {}),
+          ...(payerName.trim() ? { payerName: payerName.trim() } : {}),
+          createdAt: new Date().toISOString(),
+        });
       }
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error adding transaction:", error);
-      alert("Dogodila se greška prilikom dodavanja.");
+      setFormError("Transakcija nije spremljena. Provjerite vezu i pokušajte ponovno.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Jeste li sigurni da želite obrisati ovu transakciju?")) {
-      await deleteDoc(doc(db, "credit_transactions", id));
-    }
+  const handleDelete = async (tx: CreditTransaction) => {
+    if (deletingId || !tx.id) return;
+    if (!confirm(`Obrisati ${tx.type === 'allocation' ? 'kredit' : 'otplatu'} od ${formatCurrency(tx.amount)} za ${tx.resellerName}?`)) return;
+    setDeletingId(tx.id);
+    setActionError("");
+    try { await deleteDoc(doc(db, "credit_transactions", tx.id)); }
+    catch { setActionError("Transakcija nije obrisana. Pokušajte ponovno."); }
+    finally { setDeletingId(null); }
   };
 
   // Calculations
@@ -136,318 +163,102 @@ export default function CreditsPage() {
   .filter(b => b.allocated > 0 || b.repaid > 0)
   .sort((a, b) => b.debt - a.debt);
 
-  // Search filter for transactions
+  const normalize = (value: string) => value.toLocaleLowerCase("hr").replace(/đ/g, "d").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const displayDate = (value: string) => Number.isNaN(new Date(value).getTime()) ? value : format(new Date(value), "dd.MM.yyyy");
   const filteredTransactions = transactions.filter(tx => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return tx.resellerName.toLowerCase().includes(query) || 
-           tx.amount.toString().includes(query) ||
-           (tx.payerName && tx.payerName.toLowerCase().includes(query));
+    if (typeFilter !== "all" && tx.type !== typeFilter) return false;
+    if (resellerFilter && tx.resellerName !== resellerFilter) return false;
+    const searchable = `${tx.resellerName} ${tx.payerName || ""} ${tx.notes || ""} ${tx.amount} ${formatCurrency(tx.amount)} ${displayDate(tx.date)}`;
+    return normalize(searchable).includes(normalize(searchQuery.trim()));
   });
-
-  if (loading) {
-    return <div style={{ padding: '2rem', color: 'var(--text-primary)' }}>Učitavanje kredita...</div>;
-  }
+  const filterNames = [...new Set(transactions.map(tx => tx.resellerName))].sort((a, b) => a.localeCompare(b, "hr"));
+  const formNames = [...new Set([...resellers.map(reseller => reseller.name), ...(selectedReseller ? [selectedReseller] : [])])].sort((a, b) => a.localeCompare(b, "hr"));
+  const hasFilters = !!searchQuery || typeFilter !== "all" || !!resellerFilter;
+  const panelTitle = editingTxId
+    ? (modalType === "allocation" ? "Uredi kredit" : "Uredi otplatu")
+    : (modalType === "allocation" ? "Novi kredit" : "Upiši otplatu");
 
   return (
-    <div className="animate-fade-in" style={{ padding: '1rem 0' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: 0 }}>Sustav Kredita</h1>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button 
-            onClick={() => openModal('allocation')}
-            style={{
-              padding: '0.75rem 1.2rem', background: 'var(--danger)', color: 'white',
-              border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
-            }}>
-            <FiTrendingUp /> Izdaj Kredit
-          </button>
-          <button 
-            onClick={() => openModal('repayment')}
-            style={{
-              padding: '0.75rem 1.2rem', background: 'var(--success)', color: 'white',
-              border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-            }}>
-            <FiTrendingDown /> Upiši Otplatu
-          </button>
+    <section className="page-stack credits-page">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Krediti i otplate</p>
+          <h1>Krediti</h1>
+          <p className="muted">Jasan pregled zaduženja, otplata i preostalog duga.</p>
+        </div>
+        <div className="toolbar-actions credit-main-actions">
+          <button className="button" disabled={loading || !!loadError} onClick={() => openModal("allocation")}><FiPlus/> Novi kredit</button>
+          <button className="button button-primary" disabled={loading || !!loadError} onClick={() => openModal("repayment")}><FiArrowDownLeft/> Upiši otplatu</button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <div className="glass stat-card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-            <div style={{ padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: '12px' }}>
-              <FiTrendingUp size={24} />
-            </div>
-            <div>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Ukupno Izdano</p>
-              <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text-primary)' }}>{formatCurrency(totalAllocated)}</h3>
-            </div>
-          </div>
-        </div>
-        
-        <div className="glass stat-card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-            <div style={{ padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', borderRadius: '12px' }}>
-              <FiTrendingDown size={24} />
-            </div>
-            <div>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Ukupno Otplaćeno</p>
-              <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text-primary)' }}>{formatCurrency(totalRepaid)}</h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="glass stat-card" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--accent)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-            <div style={{ padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent)', borderRadius: '12px' }}>
-              <FiActivity size={24} />
-            </div>
-            <div>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Trenutno Nenaplaćeno (Dug)</p>
-              <h3 style={{ margin: 0, fontSize: '1.8rem', color: 'var(--accent)' }}>{formatCurrency(totalOutstanding)}</h3>
-            </div>
-          </div>
-        </div>
+      {(loadError || actionError) && <p className="notice notice-error" role="alert">{loadError || actionError}</p>}
+      <div className="summary-grid credit-summary" aria-label="Ukupno stanje kredita">
+        <div className="summary-card credit-outstanding"><span>{totalOutstanding < 0 ? "Ukupna preplata" : "Preostali dug"}</span><strong>{loading || loadError ? "—" : formatCurrency(Math.abs(totalOutstanding))}</strong><small>Izdani krediti umanjeni za otplate</small></div>
+        <div className="summary-card"><span>Ukupno izdano</span><strong>{loading || loadError ? "—" : formatCurrency(totalAllocated)}</strong><small>Svi evidentirani krediti</small></div>
+        <div className="summary-card"><span>Ukupno otplaćeno</span><strong>{loading || loadError ? "—" : formatCurrency(totalRepaid)}</strong><small>Sve evidentirane otplate</small></div>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'flex-start' }}>
-        
-        {/* Balances Table */}
-        <div className="glass" style={{ flex: '1 1 400px', borderRadius: '16px', overflow: 'hidden' }}>
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
-            <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Stanje po Resellerima</h3>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Prikaz onih s aktivnim povijestima</p>
-          </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                  <th style={{ padding: '0.6rem 0.8rem' }}>Reseller</th>
-                  <th style={{ padding: '0.6rem 0.8rem' }}>Izdano</th>
-                  <th style={{ padding: '0.6rem 0.8rem' }}>Otplaćeno</th>
-                  <th style={{ padding: '0.6rem 0.8rem' }}>Preostali Dug</th>
-                </tr>
-              </thead>
-              <tbody>
-                {balanceArray.map((b, i) => (
-                  <tr key={b.name} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--text-primary)', fontWeight: '500' }}>{b.name}</td>
-                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--danger)' }}>{formatCurrency(b.allocated)}</td>
-                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--success)' }}>{formatCurrency(b.repaid)}</td>
-                    <td style={{ padding: '0.2rem 0.8rem', color: b.debt > 0 ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 'bold' }}>
-                      {formatCurrency(b.debt)}
-                    </td>
-                  </tr>
-                ))}
-                {balanceArray.length === 0 && (
-                  <tr>
-                    <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Nema aktivnih kredita</td>
-                  </tr>
-                )}
-              </tbody>
+      {loading ? <p className="empty-state" role="status">Učitavanje kredita…</p> : !loadError && <>
+        <section className="surface credit-balances" aria-labelledby="balances-title">
+          <div className="credit-section-heading"><div><h2 id="balances-title">Stanje po resellerima</h2><p className="field-hint">Najveći dugovi prikazani su prvi.</p></div><span className="status-badge">{balanceArray.length} resellera</span></div>
+          <div className="table-scroll">
+            <table className="payment-table credit-balance-table" aria-label="Stanje po resellerima">
+              <thead><tr><th>Reseller</th><th className="amount-cell">Izdano</th><th className="amount-cell">Otplaćeno</th><th className="amount-cell">Preostali dug</th><th className="action-cell">Radnje</th></tr></thead>
+              <tbody>{balanceArray.map(balance => <tr key={balance.name}>
+                <td className="payment-name">{balance.name}</td>
+                <td className="amount-cell" data-label="Izdano">{formatCurrency(balance.allocated)}</td>
+                <td className="amount-cell" data-label="Otplaćeno">{formatCurrency(balance.repaid)}</td>
+                <td className="amount-cell credit-balance-amount" data-label={balance.debt < 0 ? "Preplata" : "Dug"}><strong>{formatCurrency(Math.abs(balance.debt))}</strong>{balance.debt <= 0 && <small>{balance.debt < 0 ? "Preplata" : "Podmireno"}</small>}</td>
+                <td className="action-cell"><div className="table-actions"><button className="button button-quiet" onClick={() => { setResellerFilter(balance.name); setSearchQuery(""); setTypeFilter("all"); document.getElementById("credit-history-title")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>Povijest</button><button className="button" onClick={() => openModal("repayment", undefined, balance.name)}>Upiši otplatu</button></div></td>
+              </tr>)}{!balanceArray.length && <tr><td colSpan={5} className="empty-state">Još nema evidentiranih kredita ili otplata.</td></tr>}</tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        {/* Transactions History */}
-        <div className="glass" style={{ flex: '1.5 1 500px', borderRadius: '16px', overflow: 'hidden' }}>
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Povijest Transakcija</h3>
-            </div>
-            <div style={{ position: 'relative' }}>
-              <FiSearch style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                type="text" 
-                placeholder="Pretraži transakcije..." 
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{
-                  background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-                  padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '8px', color: 'var(--text-primary)',
-                  outline: 'none', width: '200px'
-                }}
-              />
+        <section className="page-stack credit-history" aria-labelledby="credit-history-title">
+          <div className="credit-section-heading credit-history-heading"><div><h2 id="credit-history-title">Povijest transakcija</h2><p className="field-hint">Najnovije transakcije na vrhu.</p></div><span className="muted" role="status">{filteredTransactions.length} od {transactions.length} transakcija</span></div>
+          <div className="credit-filters">
+            <div className="search-field"><FiSearch/><input aria-label="Pretraži transakcije" placeholder="Reseller, uplatitelj, iznos ili bilješka…" value={searchQuery} onChange={event => setSearchQuery(event.target.value)}/></div>
+            <div className="credit-filter-controls">
+              <div className="credit-type-filter" role="group" aria-label="Vrsta transakcije">
+                {([{ value: "all", label: "Sve" }, { value: "allocation", label: "Krediti" }, { value: "repayment", label: "Otplate" }]).map(filter => <button key={filter.value} aria-pressed={typeFilter === filter.value} onClick={() => setTypeFilter(filter.value)}>{filter.label}</button>)}
+              </div>
+              <select aria-label="Filtriraj po reselleru" value={resellerFilter} onChange={event => setResellerFilter(event.target.value)}><option value="">Svi reselleri</option>{filterNames.map(name => <option key={name} value={name}>{name}</option>)}</select>
+              {hasFilters && <button className="text-button" onClick={() => { setSearchQuery(""); setTypeFilter("all"); setResellerFilter(""); }}>Očisti filtre</button>}
             </div>
           </div>
-          <div style={{ overflowX: 'auto', maxHeight: '500px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                  <th style={{ padding: '0.6rem 0.8rem' }}>Datum</th>
-                  <th style={{ padding: '0.6rem 0.8rem' }}>Reseller</th>
-                  <th style={{ padding: '0.6rem 0.8rem' }}>Tip</th>
-                  <th style={{ padding: '0.6rem 0.8rem' }}>Iznos</th>
-                  <th style={{ padding: '0.6rem 0.8rem', textAlign: 'right' }}>Akcije</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTransactions.map((tx, i) => (
-                  <tr key={tx.id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--text-secondary)' }}>
-                      {format(new Date(tx.date), 'dd.MM.yyyy')}
-                    </td>
-                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--text-primary)', fontWeight: '500' }}>
-                      <div style={{ lineHeight: '1.2' }}>{tx.resellerName}</div>
-                      {(tx.payerName || tx.notes) && (
-                        <div style={{ fontSize: '0.75em', color: 'var(--text-muted)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', lineHeight: '1.2' }}>
-                          {tx.payerName && <span>Uplatio: {tx.payerName}</span>}
-                          {tx.payerName && tx.notes && <span>|</span>}
-                          {tx.notes && <span style={{ fontStyle: 'italic' }}>* {tx.notes}</span>}
-                        </div>
-                      )}
-                    </td>
-                    <td style={{ padding: '0.2rem 0.8rem' }}>
-                      <span style={{
-                        padding: '0.15rem 0.4rem',
-                        borderRadius: '4px',
-                        fontSize: '0.7rem',
-                        fontWeight: 'bold',
-                        background: tx.type === 'allocation' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                        color: tx.type === 'allocation' ? 'var(--danger)' : 'var(--success)'
-                      }}>
-                        {tx.type === 'allocation' ? 'KREDIT' : 'OTPLATA'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.2rem 0.8rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>
-                      {tx.type === 'allocation' ? '+' : '-'}{formatCurrency(tx.amount)}
-                    </td>
-                    <td style={{ padding: '0.2rem 0.8rem', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
-                        <button onClick={() => openModal(tx.type, tx)} style={{ padding: '0.3rem', background: 'rgba(59, 130, 246, 0.1)', border: 'none', borderRadius: '6px', color: 'var(--accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }} title="Uredi" className="hover-scale">
-                          <FiEdit3 size={16} />
-                        </button>
-                        <button onClick={() => handleDelete(tx.id!)} style={{ padding: '0.3rem', background: 'rgba(239, 68, 68, 0.1)', border: 'none', borderRadius: '6px', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }} title="Obriši" className="hover-scale">
-                          <FiTrash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {filteredTransactions.length === 0 && (
-                  <tr>
-                    <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Nema pronađenih transakcija</td>
-                  </tr>
-                )}
-              </tbody>
+          <div className="surface table-scroll">
+            <table className="payment-table credit-history-table" aria-label="Povijest transakcija">
+              <thead><tr><th>Datum</th><th>Reseller / uplatitelj</th><th>Vrsta</th><th className="amount-cell">Iznos</th><th className="action-cell">Radnje</th></tr></thead>
+              <tbody>{filteredTransactions.map(tx => <tr key={tx.id}>
+                <td className="date-cell">{displayDate(tx.date)}</td>
+                <td className="credit-transaction-name"><strong>{tx.resellerName}</strong>{(tx.payerName || tx.notes) && <div className="credit-transaction-note">{tx.payerName && <span>Uplatio: {tx.payerName}</span>}{tx.payerName && tx.notes && <span aria-hidden="true"> · </span>}{tx.notes && <span>{tx.notes}</span>}</div>}</td>
+                <td className="credit-type-cell"><span className={`credit-type-badge ${tx.type}`}>{tx.type === "allocation" ? "Kredit" : "Otplata"}</span></td>
+                <td className="amount-cell credit-transaction-amount">{tx.type === "allocation" ? "+" : "−"}{formatCurrency(tx.amount)}</td>
+                <td className="action-cell"><div className="table-actions"><button className="button button-quiet" aria-label={`Uredi ${tx.type === "allocation" ? "kredit" : "otplatu"} ${displayDate(tx.date)} ${formatCurrency(tx.amount)}`} onClick={() => openModal(tx.type, tx)} disabled={!!deletingId}><FiEdit3/><span>Uredi</span></button><button className="button button-quiet button-danger" title="Obriši transakciju" aria-label={`Obriši transakciju ${displayDate(tx.date)} ${formatCurrency(tx.amount)}`} onClick={() => handleDelete(tx)} disabled={!!deletingId}><FiTrash2/></button></div></td>
+              </tr>)}{!filteredTransactions.length && <tr><td colSpan={5} className="empty-state">{transactions.length ? "Nema transakcija za odabrane filtre." : "Još nema transakcija. Dodajte kredit ili evidentirajte otplatu."}</td></tr>}</tbody>
             </table>
           </div>
-        </div>
-      </div>
+        </section>
+      </>}
 
-      {/* Modal for adding transaction */}
-      {isModalOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, padding: '2rem 1rem', overflowY: 'auto'
-        }}>
-          <div className="glass" style={{ background: 'var(--bg-primary)', padding: '1.5rem', borderRadius: '16px', width: '100%', maxWidth: '400px', margin: '0 auto', border: '1px solid var(--border)' }}>
-            <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)', fontSize: '1.5rem' }}>
-              {editingTxId 
-                ? (modalType === 'allocation' ? 'Uredi Kredit' : 'Uredi Otplatu')
-                : (modalType === 'allocation' ? 'Dodaj Novi Kredit' : 'Upiši Otplatu Kredita')
-              }
-            </h2>
-            
-            <form onSubmit={handleAddTransaction} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Reseller</label>
-                <select 
-                  value={selectedReseller} 
-                  onChange={e => setSelectedReseller(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                >
-                  <option value="">Odaberite resellera...</option>
-                  {resellers.map(r => (
-                    <option key={r.id} value={r.name}>{r.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              {modalType === 'repayment' && (
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Ime Uplatitelja / Subsellera (Opcionalno)</label>
-                  <input 
-                    type="text" 
-                    placeholder="Npr. Ahmet"
-                    value={payerName}
-                    onChange={e => setPayerName(e.target.value)}
-                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                  />
-                </div>
-              )}
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Iznos (€)</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>€</span>
-                  <input  
-                    type="number" 
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    required
-                    style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.5rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ width: '100%' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Datum</label>
-                <div style={{ width: '100%' }}>
-                  <DatePicker 
-                    selected={date} 
-                    onChange={(d: Date | null) => d && setDate(d)}
-                    dateFormat="dd.MM.yyyy."
-                    wrapperClassName="w-full"
-                    customInput={
-                      <input 
-                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                      />
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Bilješka (opcionalno)</label>
-                <input 
-                  type="text" 
-                  placeholder="Npr. Kratkoročna pozajmica"
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <button 
-                  type="button" 
-                  onClick={() => setIsModalOpen(false)}
-                  style={{ flex: 1, padding: '0.8rem', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '8px', cursor: 'pointer' }}
-                >
-                  Odustani
-                </button>
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  style={{ flex: 1, padding: '0.8rem', background: modalType === 'allocation' ? 'var(--danger)' : 'var(--success)', border: 'none', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  {isSubmitting ? 'Spremanje...' : (editingTxId ? 'Spremi Promjene' : (modalType === 'allocation' ? 'Dodaj Kredit' : 'Upiši Otplatu'))}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+      {isModalOpen && <SidePanel title={panelTitle} onClose={() => { if (!isSubmitting) setIsModalOpen(false); }}>
+        <form onSubmit={handleAddTransaction} className="stack-form">
+          <p className="muted">{modalType === "allocation" ? "Kredit povećava zaduženje odabranog resellera." : "Otplata umanjuje zaduženje odabranog resellera."}</p>
+          {(formError || resellerError) && <p className="notice notice-error" role="alert">{formError || resellerError}</p>}
+          <fieldset className="form-fields" disabled={isSubmitting || resellersLoading || !!resellerError}>
+            <label htmlFor="credit-reseller">Reseller</label>
+            <select id="credit-reseller" value={selectedReseller} onChange={event => setSelectedReseller(event.target.value)} required><option value="">{resellersLoading ? "Učitavanje…" : "Odaberite resellera"}</option>{formNames.map(name => <option key={name} value={name}>{name}</option>)}</select>
+            {modalType === "repayment" && <><label htmlFor="credit-payer">Uplatitelj / subseller <span className="muted">(neobavezno)</span></label><input id="credit-payer" placeholder="Ime uplatitelja" value={payerName} onChange={event => setPayerName(event.target.value)}/></>}
+            <label htmlFor="credit-amount">Iznos (€)</label><input id="credit-amount" type="number" step="0.01" min="0" placeholder="0,00" value={amount} onChange={event => setAmount(event.target.value)} required/>
+            <label htmlFor="credit-date">Datum</label><DatePicker id="credit-date" selected={date} onChange={(value: Date | null) => value && setDate(value)} dateFormat="dd.MM.yyyy." locale={hr} required/>
+            <label htmlFor="credit-notes">Bilješka <span className="muted">(neobavezno)</span></label><textarea id="credit-notes" rows={3} placeholder="Dodajte kratku napomenu" value={notes} onChange={event => setNotes(event.target.value)}/>
+            <button type="submit" className="button button-primary">{isSubmitting ? "Spremanje…" : editingTxId ? "Spremi promjene" : modalType === "allocation" ? "Spremi kredit" : "Spremi otplatu"}</button>
+            <button type="button" className="button button-quiet" onClick={() => setIsModalOpen(false)}>Odustani</button>
+          </fieldset>
+        </form>
+      </SidePanel>}
+    </section>
   );
 }

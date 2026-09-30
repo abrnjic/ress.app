@@ -438,3 +438,59 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 @media (max-width: 680px) { .payment-table th, .payment-table td { padding: 10px; } .payment-table { min-width: 520px; } }
 .profile-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 24px; align-items: start; }
 @media (max-width: 1000px) { .profile-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Credits: full-width history and compact balances, sharing the workspace controls. */
+.credit-summary .summary-card small { color: var(--text-muted); font-size: 11px; }
+.credit-summary .credit-outstanding { border-color: var(--accent); }
+.credit-outstanding strong { color: var(--accent); }
+.credit-section-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+.credit-section-heading h2 { font-size: 17px; font-weight: 600; margin-bottom: 3px; }
+.credit-history-heading { padding: 0; border: 0; }
+.credit-history { gap: 14px; }
+#credit-history-title { scroll-margin-top: 24px; }
+.credit-balance-amount strong { color: var(--accent); }
+.credit-balance-amount small { display: block; color: var(--text-secondary); font-size: 11px; }
+.credit-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.credit-filter-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.credit-filter-controls select { min-height: 42px; max-width: 230px; padding: 9px 12px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); border-radius: 8px; font: inherit; font-size: 13px; }
+.credit-type-filter { display: flex; gap: 3px; padding: 4px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; }
+.credit-type-filter button { padding: 6px 12px; border: 0; border-radius: 5px; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12px; min-height: 32px; }
+.credit-type-filter button[aria-pressed='true'] { background: var(--accent-glow); color: var(--accent); font-weight: 600; }
+.credit-type-filter button:hover { background: var(--bg-hover); }
+.credit-transaction-name { overflow-wrap: anywhere; max-width: 460px; }
+.credit-transaction-name strong { font-weight: 550; }
+.credit-transaction-note { color: var(--text-secondary); font-size: 11px; line-height: 1.45; margin-top: 2px; }
+.credit-type-badge { display: inline-block; border-radius: 5px; font-size: 11px; font-weight: 550; padding: 3px 8px; }
+.credit-type-badge.allocation { background: var(--accent-glow); color: var(--accent); }
+.credit-type-badge.repayment { background: rgba(16,185,129,.12); color: var(--success); }
+[data-theme='light'] .credit-type-badge.repayment { color: #047857; }
+.credit-transaction-amount { font-weight: 600; }
+.credit-history-table .table-actions .button { min-height: 36px; }
+@media (max-width: 680px) {
+  .credit-main-actions { width: 100%; }
+  .credit-main-actions .button { flex: 1; }
+  .credit-summary .credit-outstanding { grid-column: 1 / -1; }
+  .credit-summary .summary-card:last-child { grid-column: auto; }
+  .credit-section-heading { padding: 14px; }
+  .credit-history-heading { padding: 0; }
+  .credit-filters .search-field { flex-basis: 100%; }
+  .credit-filter-controls { width: 100%; }
+  .credit-filter-controls select { flex: 1; min-width: 0; max-width: 100%; }
+  .credit-type-filter button { padding: 6px 9px; }
+  .credit-history-table, .credit-balance-table { min-width: 0; }
+  .credit-history-table thead, .credit-balance-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  .credit-history-table tbody, .credit-balance-table tbody { display: block; }
+  .credit-history-table tbody tr { display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-areas: 'date type' 'name amount' 'actions actions'; align-items: center; gap: 7px 12px; padding: 14px; border-bottom: 1px solid var(--border); }
+  .credit-history-table td, .credit-balance-table td { display: block; border: 0; padding: 0; }
+  .credit-history-table .date-cell { grid-area: date; font-size: 11px; }
+  .credit-history-table .credit-type-cell { grid-area: type; text-align: right; }
+  .credit-history-table .credit-transaction-name { grid-area: name; }
+  .credit-history-table .credit-transaction-amount { grid-area: amount; }
+  .credit-history-table .action-cell { grid-area: actions; }
+  .credit-history-table .empty-state, .credit-balance-table .empty-state { grid-column: 1 / -1; padding: 20px 0; }
+  .credit-balance-table tbody tr { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px 8px; padding: 16px 14px; border-bottom: 1px solid var(--border); }
+  .credit-balance-table .payment-name, .credit-balance-table .action-cell { grid-column: 1 / -1; }
+  .credit-balance-table .amount-cell { text-align: left; white-space: normal; overflow-wrap: anywhere; font-size: 12px; }
+  .credit-balance-table .amount-cell::before { content: attr(data-label); display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 5px; }
+  .credit-balance-table .table-actions { justify-content: flex-start; }
+}
