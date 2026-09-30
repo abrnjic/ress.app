@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { resellerNameVariants } from "@/lib/reseller-names";
 import { db } from "@/lib/firebase";
-import { Reseller, Payment, formatCurrency } from "@/lib/types";
+import { Reseller, Payment, formatCurrency, formatName } from "@/lib/types";
 import { useParams, useRouter } from "next/navigation";
 import { FiArrowLeft, FiEdit3, FiMail, FiPhone, FiCalendar, FiDollarSign } from "react-icons/fi";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -132,7 +132,7 @@ export default function ResellerProfilePage() {
         <div className="glass" style={{ padding: '2rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
             <div>
-              <h1 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 0.5rem 0', letterSpacing: '-0.025em' }}>{reseller.name}</h1>
+              <h1 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 0.5rem 0', letterSpacing: '-0.025em' }}>{formatName(reseller.name)}</h1>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.75rem', background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: '999px', fontSize: '0.875rem', fontWeight: '600' }}>
                 <FiCalendar /> Aktivan klijent
               </span>

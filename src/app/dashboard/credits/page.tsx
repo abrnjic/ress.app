@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy, onSnapshot, deleteField } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { CreditTransaction, Reseller, formatCurrency } from "@/lib/types";
+import { CreditTransaction, Reseller, formatCurrency, formatName } from "@/lib/types";
 import { FiPlus, FiArrowDownLeft, FiTrash2, FiSearch, FiEdit3 } from "react-icons/fi";
 import SidePanel from "@/components/SidePanel";
 import { hr } from "date-fns/locale/hr";
@@ -126,7 +126,7 @@ export default function CreditsPage() {
 
   const handleDelete = async (tx: CreditTransaction) => {
     if (deletingId || !tx.id) return;
-    if (!confirm(`Obrisati ${tx.type === 'allocation' ? 'kredit' : 'otplatu'} od ${formatCurrency(tx.amount)} za ${tx.resellerName}?`)) return;
+    if (!confirm(`Obrisati ${tx.type === 'allocation' ? 'kredit' : 'otplatu'} od ${formatCurrency(tx.amount)} za ${formatName(tx.resellerName)}?`)) return;
     setDeletingId(tx.id);
     setActionError("");
     try { await deleteDoc(doc(db, "credit_transactions", tx.id)); }
@@ -206,7 +206,7 @@ export default function CreditsPage() {
             <table className="payment-table credit-balance-table" aria-label="Stanje po resellerima">
               <thead><tr><th>Reseller</th><th className="amount-cell">Izdano</th><th className="amount-cell">Otplaćeno</th><th className="amount-cell">Preostali dug</th><th className="action-cell">Radnje</th></tr></thead>
               <tbody>{balanceArray.map(balance => <tr key={balance.name}>
-                <td className="payment-name">{balance.name}</td>
+                <td className="payment-name">{formatName(balance.name)}</td>
                 <td className="amount-cell" data-label="Izdano">{formatCurrency(balance.allocated)}</td>
                 <td className="amount-cell" data-label="Otplaćeno">{formatCurrency(balance.repaid)}</td>
                 <td className="amount-cell credit-balance-amount" data-label={balance.debt < 0 ? "Preplata" : "Dug"}><strong>{formatCurrency(Math.abs(balance.debt))}</strong>{balance.debt <= 0 && <small>{balance.debt < 0 ? "Preplata" : "Podmireno"}</small>}</td>
@@ -224,7 +224,7 @@ export default function CreditsPage() {
               <div className="credit-type-filter" role="group" aria-label="Vrsta transakcije">
                 {([{ value: "all", label: "Sve" }, { value: "allocation", label: "Krediti" }, { value: "repayment", label: "Otplate" }]).map(filter => <button key={filter.value} aria-pressed={typeFilter === filter.value} onClick={() => setTypeFilter(filter.value)}>{filter.label}</button>)}
               </div>
-              <select aria-label="Filtriraj po reselleru" value={resellerFilter} onChange={event => setResellerFilter(event.target.value)}><option value="">Svi reselleri</option>{filterNames.map(name => <option key={name} value={name}>{name}</option>)}</select>
+              <select aria-label="Filtriraj po reselleru" value={resellerFilter} onChange={event => setResellerFilter(event.target.value)}><option value="">Svi reselleri</option>{filterNames.map(name => <option key={name} value={name}>{formatName(name)}</option>)}</select>
               {hasFilters && <button className="text-button" onClick={() => { setSearchQuery(""); setTypeFilter("all"); setResellerFilter(""); }}>Očisti filtre</button>}
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function CreditsPage() {
               <thead><tr><th>Datum</th><th>Reseller / uplatitelj</th><th>Vrsta</th><th className="amount-cell">Iznos</th><th className="action-cell">Radnje</th></tr></thead>
               <tbody>{filteredTransactions.map(tx => <tr key={tx.id}>
                 <td className="date-cell">{displayDate(tx.date)}</td>
-                <td className="credit-transaction-name"><strong>{tx.resellerName}</strong>{(tx.payerName || tx.notes) && <div className="credit-transaction-note">{tx.payerName && <span>Uplatio: {tx.payerName}</span>}{tx.payerName && tx.notes && <span aria-hidden="true"> · </span>}{tx.notes && <span>{tx.notes}</span>}</div>}</td>
+                <td className="credit-transaction-name"><strong>{formatName(tx.resellerName)}</strong>{(tx.payerName || tx.notes) && <div className="credit-transaction-note">{tx.payerName && <span>Uplatio: {tx.payerName}</span>}{tx.payerName && tx.notes && <span aria-hidden="true"> · </span>}{tx.notes && <span>{tx.notes}</span>}</div>}</td>
                 <td className="credit-type-cell"><span className={`credit-type-badge ${tx.type}`}>{tx.type === "allocation" ? "Kredit" : "Otplata"}</span></td>
                 <td className="amount-cell credit-transaction-amount">{tx.type === "allocation" ? "+" : "−"}{formatCurrency(tx.amount)}</td>
                 <td className="action-cell"><div className="table-actions"><button className="button button-quiet" aria-label={`Uredi ${tx.type === "allocation" ? "kredit" : "otplatu"} ${displayDate(tx.date)} ${formatCurrency(tx.amount)}`} onClick={() => openModal(tx.type, tx)} disabled={!!deletingId}><FiEdit3/><span>Uredi</span></button><button className="button button-quiet button-danger" title="Obriši transakciju" aria-label={`Obriši transakciju ${displayDate(tx.date)} ${formatCurrency(tx.amount)}`} onClick={() => handleDelete(tx)} disabled={!!deletingId}><FiTrash2/></button></div></td>
@@ -249,7 +249,7 @@ export default function CreditsPage() {
           {(formError || resellerError) && <p className="notice notice-error" role="alert">{formError || resellerError}</p>}
           <fieldset className="form-fields" disabled={isSubmitting || resellersLoading || !!resellerError}>
             <label htmlFor="credit-reseller">Reseller</label>
-            <select id="credit-reseller" value={selectedReseller} onChange={event => setSelectedReseller(event.target.value)} required><option value="">{resellersLoading ? "Učitavanje…" : "Odaberite resellera"}</option>{formNames.map(name => <option key={name} value={name}>{name}</option>)}</select>
+            <select id="credit-reseller" value={selectedReseller} onChange={event => setSelectedReseller(event.target.value)} required><option value="">{resellersLoading ? "Učitavanje…" : "Odaberite resellera"}</option>{formNames.map(name => <option key={name} value={name}>{formatName(name)}</option>)}</select>
             {modalType === "repayment" && <><label htmlFor="credit-payer">Uplatitelj / subseller <span className="muted">(neobavezno)</span></label><input id="credit-payer" placeholder="Ime uplatitelja" value={payerName} onChange={event => setPayerName(event.target.value)}/></>}
             <label htmlFor="credit-amount">Iznos (€)</label><input id="credit-amount" type="number" step="0.01" min="0" placeholder="0,00" value={amount} onChange={event => setAmount(event.target.value)} required/>
             <label htmlFor="credit-date">Datum</label><DatePicker id="credit-date" selected={date} onChange={(value: Date | null) => value && setDate(value)} dateFormat="dd.MM.yyyy." locale={hr} required/>

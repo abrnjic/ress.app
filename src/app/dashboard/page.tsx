@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { collection, query, where, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Payment, MonthStatus, formatCurrency } from "@/lib/types";
+import { Payment, MonthStatus, formatCurrency, formatName } from "@/lib/types";
 import { format, subMonths, addMonths } from "date-fns";
 import { hr } from "date-fns/locale/hr";
 
@@ -235,7 +235,7 @@ export default function DashboardPage() {
     const tableData = payments.map((p, i) => [
       i + 1,
       format(parseCustomDate(p.date), 'dd.MM.yyyy'),
-      p.resellerName,
+      formatName(p.resellerName),
       `${p.amount.toFixed(2)} EUR`
     ]);
 
@@ -271,7 +271,7 @@ export default function DashboardPage() {
     const headers = ["Datum", "Reseller", "Iznos (EUR)"];
     const rows = payments.map(p => [
       format(parseCustomDate(p.date), 'dd.MM.yyyy'),
-      p.resellerName,
+      formatName(p.resellerName),
       p.amount.toFixed(2)
     ]);
     

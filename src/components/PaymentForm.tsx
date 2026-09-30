@@ -67,7 +67,7 @@ export default function PaymentForm({ onPaymentAdded, selectedMonth, isMonthClos
       <label htmlFor="payment-reseller">Reseller</label>
       {!isNewReseller ? <select id="payment-reseller" value={resellerName} required onChange={event => { if (event.target.value === "__new__") { setIsNewReseller(true); setResellerName(""); } else setResellerName(event.target.value); }}>
         <option value="" disabled>{loadingResellers ? "Učitavanje…" : "Odaberite resellera"}</option>
-        {resellers.map((name, index) => <option key={`${name}-${index}`} value={name}>{name}</option>)}
+        {resellers.map((name, index) => <option key={`${name}-${index}`} value={name}>{formatName(name)}</option>)}
         <option value="__new__">+ Novi reseller</option>
       </select> : <><input id="payment-reseller" value={resellerName} onChange={event => setResellerName(event.target.value)} placeholder="Ime novog resellera" required autoFocus/><button className="text-button" type="button" onClick={() => { setIsNewReseller(false); setResellerName(""); }}>Odaberi postojećeg resellera</button><p className="field-hint">Novi profil i uplata spremaju se zajedno.</p></>}
       <label htmlFor="payment-amount">Iznos (€)</label><input id="payment-amount" inputMode="decimal" value={amount} onChange={event => setAmount(event.target.value)} placeholder="0,00" required/>
