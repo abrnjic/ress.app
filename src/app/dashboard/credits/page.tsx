@@ -243,7 +243,7 @@ export default function CreditsPage() {
         </section>
       </>}
 
-      {isModalOpen && <SidePanel title={panelTitle} onClose={() => { if (!isSubmitting) setIsModalOpen(false); }}>
+      {isModalOpen && <SidePanel centered title={panelTitle} onClose={() => { if (!isSubmitting) setIsModalOpen(false); }}>
         <form onSubmit={handleAddTransaction} className="stack-form">
           <p className="muted">{modalType === "allocation" ? "Kredit povećava zaduženje odabranog resellera." : "Otplata umanjuje zaduženje odabranog resellera."}</p>
           {(formError || resellerError) && <p className="notice notice-error" role="alert">{formError || resellerError}</p>}
