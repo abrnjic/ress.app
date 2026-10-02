@@ -3,7 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { FiX } from "react-icons/fi";
 
-export default function SidePanel({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
+export default function SidePanel({ title, children, onClose, centered = false }: { title: string; children: ReactNode; onClose: () => void; centered?: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const element = dialog.current;
@@ -13,8 +13,8 @@ export default function SidePanel({ title, children, onClose }: { title: string;
     document.body.style.overflow = "hidden";
     return () => { element?.close(); document.body.style.overflow = overflow; previous?.focus(); };
   }, []);
-  return <dialog ref={dialog} className="side-panel" aria-labelledby="panel-title" onCancel={event => { event.preventDefault(); onClose(); }} onClick={event => { if (event.target === event.currentTarget) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) onClose(); } }}>
-    <header className="panel-header"><h2 id="panel-title">{title}</h2><button className="button button-icon" aria-label="Zatvori panel" onClick={onClose}><FiX/></button></header>
+  return <dialog ref={dialog} className={`side-panel${centered ? " centered-dialog" : ""}`} aria-labelledby="panel-title" onCancel={event => { event.preventDefault(); onClose(); }} onClick={event => { if (event.target === event.currentTarget) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) onClose(); } }}>
+    <header className="panel-header"><h2 id="panel-title">{title}</h2><button className="button button-icon" aria-label={centered ? "Zatvori prozor" : "Zatvori panel"} onClick={onClose}><FiX/></button></header>
     <div className="panel-content">{children}</div>
   </dialog>;
 }

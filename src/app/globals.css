@@ -494,3 +494,6 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   .credit-balance-table .amount-cell::before { content: attr(data-label); display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 5px; }
   .credit-balance-table .table-actions { justify-content: flex-start; }
 }
+
+/* Centered payment dialog stays within small screens and scrolls when needed. */
+.side-panel.centered-dialog { inset: 0; margin: auto; width: min(520px, calc(100% - 32px)); height: fit-content; max-height: calc(100dvh - 32px); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 24px 80px #02061740; }
